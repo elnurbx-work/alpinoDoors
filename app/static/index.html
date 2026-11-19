@@ -95,6 +95,7 @@
   <section class="stage">
     <div class="stage-top">
       <div class="seg"><button id="vBefore" class="on" disabled>Boşluq</button><button id="vAfter" disabled>Nəticə</button></div>
+      <button class="chip" id="nextc" style="display:none">Başqa boşluq</button>
       <div class="hint" id="hint">Şəkil yükləyin</div>
     </div>
     <div class="canvas-box" id="box">
@@ -155,7 +156,7 @@
 <script>
 const $=id=>document.getElementById(id);
 const cv=$('cv'),ctx=cv.getContext('2d'),loupe=$('loupe'),lctx=loupe.getContext('2d');
-let file=null,img=null,quad=null,auto=null,drag=-1,door='double_bar',glass='',resultUrl=null,dirty=true;
+let file=null,img=null,quad=null,auto=null,cands=[],ci=0,snap=[],drag=-1,door='double_bar',glass='',resultUrl=null,dirty=true;
 
 function toast(t,ms=2400){const e=$('toast');e.textContent=t;e.classList.add('on');clearTimeout(e._t);e._t=setTimeout(()=>e.classList.remove('on'),ms)}
 function busy(on){$('busy').classList.toggle('on',on)}
@@ -193,11 +194,13 @@ async function load(f){
   img=new Image();
   img.onload=()=>{
     cv.width=det.size[0];cv.height=det.size[1];
+    cands=det.candidates||[det.quad];ci=0;snap=det.snap||[];
     quad=det.quad.map(p=>[...p]);auto=det.quad.map(p=>[...p]);
+    $('nextc').style.display=cands.length>1?'':'none';$('nextc').textContent=`Başqa boşluq (1/${cands.length})`;
     drop.style.display='none';resultUrl=null;dirty=true;
     ['go','reset'].forEach(i=>$(i).disabled=false);['dl','share','vAfter'].forEach(i=>$(i).disabled=true);
     show('before');busy(false);
-    $('hint').textContent=det.auto?'Boşluq avtomatik tapıldı — lazım olsa küncləri düzəldin':'Sarı nöqtələri boşluğun 4 küncünə çəkin';
+    $('hint').textContent=det.auto?'Boşluq avtomatik tapıldı — yoxlayın, lazım olsa nöqtəni çəkin':'Sarı nöqtələri boşluğun 4 küncünə çəkin';
   };
   img.src=URL.createObjectURL(f);
 }
@@ -218,7 +221,11 @@ cv.addEventListener('pointerdown',e=>{
   if(best>40*s){drag=-1;return}cv.setPointerCapture(e.pointerId);move(e);
 });
 cv.addEventListener('pointermove',e=>{if(drag>=0)move(e)});
-cv.addEventListener('pointerup',()=>{drag=-1;loupe.style.display='none';draw();dirty=true});
+cv.addEventListener('pointerup',()=>{
+  // maqnit: nöqtə yaxınlıqdakı real küncə yapışır
+  if(drag>=0&&snap.length){const s=cv.width/cv.getBoundingClientRect().width,q=quad[drag];let b=null,bd=22*s;
+    snap.forEach(p=>{const d=Math.hypot(p[0]-q[0],p[1]-q[1]);if(d<bd){bd=d;b=p}});if(b)quad[drag]=[...b]}
+  drag=-1;loupe.style.display='none';draw();dirty=true});
 function move(e){
   const p=pos(e);p[0]=Math.max(0,Math.min(cv.width,p[0]));p[1]=Math.max(0,Math.min(cv.height,p[1]));quad[drag]=p;draw();
   // lupa: dəqiq yerləşdirmək üçün
@@ -227,6 +234,8 @@ function move(e){
   lctx.strokeStyle='#ffd23f';lctx.lineWidth=1.5;lctx.beginPath();lctx.moveTo(65,50);lctx.lineTo(65,80);lctx.moveTo(50,65);lctx.lineTo(80,65);lctx.stroke();
   const lx=e.clientX-bb.left,ly=e.clientY-bb.top;loupe.style.left=(lx<170?lx+30:lx-160)+'px';loupe.style.top=Math.max(0,ly-160)+'px';loupe.style.display='block';
 }
+$('nextc').onclick=()=>{ci=(ci+1)%cands.length;quad=cands[ci].map(p=>[...p]);auto=cands[ci].map(p=>[...p]);
+  $('nextc').textContent=`Başqa boşluq (${ci+1}/${cands.length})`;show('before');dirty=true};
 $('reset').onclick=()=>{quad=auto.map(p=>[...p]);show('before');dirty=true};
 window.addEventListener('resize',()=>quad&&draw());
 

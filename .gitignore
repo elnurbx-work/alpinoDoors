@@ -5,4 +5,5 @@ data/
 runs/
 weights/*.pt
 *.pt
+!weights/yoloe_doors.pt
 .DS_Store

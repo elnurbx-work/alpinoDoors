@@ -45,6 +45,9 @@ PRESETS = {
     "french_arch": DoorStyle(name="Fransız tağlı, cüt", leaves=2, arch="full", h_bars=[0.45], v_bars=1),
     "arch_single": DoorStyle(name="Tağlı tək", leaves=1, arch="leaf", h_bars=[0.5]),
     "fluted_double": DoorStyle(name="Cüt tay, rifli şüşə", leaves=2, h_bars=[], glass="fluted"),
+    "single_grid": DoorStyle(name="Tək tay, şəbəkə", leaves=1, h_bars=[0.25, 0.5, 0.75], v_bars=1),
+    "triple_bar": DoorStyle(name="Üç tay, arakəsmə", leaves=3, h_bars=[0.42]),
+    "bronze_double": DoorStyle(name="Cüt tay, bronz şüşə", leaves=2, h_bars=[0.33, 0.66], glass="bronze"),
 }
 
 

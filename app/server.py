@@ -30,10 +30,12 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 from alpino import DoorCutter, OpeningDetector, get_door, list_doors, place_door, save_template  # noqa: E402
 from alpino.geometry import order_corners  # noqa: E402
+from alpino.zeroshot import ZeroShotOpening, snap_points  # noqa: E402
 
 app = FastAPI(title="Alpino Doors – vizualizasiya")
 opening = OpeningDetector(ROOT / "weights" / "opening.pt")
 cutter = DoorCutter(ROOT / "weights" / "door.pt")
+zeroshot = None if opening.ready else ZeroShotOpening(ROOT / "weights" / "yoloe_doors.pt")
 MAX_SIDE = 2400
 DATASET = Path(os.environ.get("ALPINO_DATASET", ROOT / "dataset"))
 ADMIN_TOKEN = os.environ.get("ADMIN_TOKEN", "")
@@ -90,7 +92,8 @@ def index():
 
 @app.get("/api/doors")
 def doors():
-    return {"doors": list_doors(), "opening_model": opening.ready, "door_model": cutter.ready,
+    return {"doors": list_doors(), "opening_model": opening.ready or bool(zeroshot and zeroshot.ready),
+            "door_model": cutter.ready,
             "dataset": _count()}
 
 
@@ -119,11 +122,15 @@ def door_preview(door_id: str):
 async def detect(photo: UploadFile = File(...)):
     img, _ = await _read(photo)
     h, w = img.shape[:2]
-    found = opening.detect(img)
-    if found:
-        return {"quad": found[0]["quad"], "auto": True, "score": found[0]["score"], "size": [w, h]}
-    return {"quad": [[w * .3, h * .2], [w * .7, h * .2], [w * .7, h * .9], [w * .3, h * .9]],
-            "auto": False, "size": [w, h]}
+    found, source = [], None
+    if opening.ready:
+        found, source = opening.detect(img)[:3], "trained"
+    elif zeroshot and zeroshot.ready:
+        found, source = zeroshot.detect(img), "zeroshot"
+    default = [[w * .3, h * .2], [w * .7, h * .2], [w * .7, h * .9], [w * .3, h * .9]]
+    cands = [f["quad"] for f in found] or [default]
+    return {"quad": cands[0], "candidates": cands, "auto": bool(found), "source": source,
+            "size": [w, h], "snap": snap_points(img)}
 
 
 @app.post("/api/render")
