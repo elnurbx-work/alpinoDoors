@@ -2,149 +2,267 @@
 <html lang="az">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Alpino Doors — Vizualizasiya</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#ffffff">
+<title>Alpino — Qapı vizualizasiyası</title>
 <style>
-  :root { --ink:#1c1c1e; --muted:#6b6b70; --line:#e3e3e6; --accent:#111; --bg:#f6f6f4; }
-  * { box-sizing: border-box; }
-  body { margin:0; font:15px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; color:var(--ink); background:var(--bg); }
-  header { padding:18px 24px; border-bottom:1px solid var(--line); background:#fff; display:flex; align-items:baseline; gap:14px; }
-  header h1 { margin:0; font-size:18px; letter-spacing:.32em; font-weight:500; }
-  header span { color:var(--muted); font-size:13px; }
-  main { display:grid; grid-template-columns: 320px 1fr; gap:24px; padding:24px; max-width:1500px; margin:auto; }
-  @media (max-width: 860px) { main { grid-template-columns: 1fr; } }
-  .panel { background:#fff; border:1px solid var(--line); border-radius:10px; padding:18px; align-self:start; }
-  label { display:block; font-size:12px; color:var(--muted); margin:14px 0 6px; text-transform:uppercase; letter-spacing:.06em; }
-  input[type=number], select, input[type=file] { width:100%; padding:9px 10px; border:1px solid var(--line); border-radius:7px; font:inherit; background:#fff; }
-  .row { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
-  button { margin-top:18px; width:100%; padding:12px; border:0; border-radius:8px; background:var(--accent); color:#fff; font:inherit; font-weight:600; cursor:pointer; }
-  button:disabled { opacity:.4; cursor:default; }
-  button.ghost { background:#fff; color:var(--ink); border:1px solid var(--line); margin-top:8px; font-weight:500; }
-  .check { display:flex; gap:8px; align-items:center; margin-top:14px; font-size:14px; }
-  .hint { color:var(--muted); font-size:13px; margin-top:10px; }
-  .stage { display:grid; grid-template-columns:1fr 1fr; gap:18px; }
-  @media (max-width: 1100px) { .stage { grid-template-columns:1fr; } }
-  .view { background:#fff; border:1px solid var(--line); border-radius:10px; padding:12px; min-height:300px; }
-  .view h3 { margin:2px 4px 10px; font-size:13px; font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:.06em; }
-  .canvas-wrap { position:relative; touch-action:none; }
-  canvas, #result { width:100%; display:block; border-radius:6px; }
-  .empty { color:var(--muted); display:grid; place-items:center; height:260px; text-align:center; }
-  #status { font-size:13px; margin-top:12px; min-height:1.4em; }
-  a.dl { display:inline-block; margin-top:10px; color:var(--ink); }
+  :root{
+    --bg:#f4f3f0; --card:#fff; --ink:#151517; --muted:#76767c; --line:#e6e5e1; --soft:#f0efeb;
+    --accent:#151517; --gold:#b8945a; --ok:#2f7d4f; --r:14px;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,sans-serif;-webkit-font-smoothing:antialiased}
+  button,input,select{font:inherit;color:inherit}
+  header{position:sticky;top:0;z-index:5;background:rgba(255,255,255,.92);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+  .bar{max-width:1320px;margin:auto;padding:14px 20px;display:flex;align-items:center;gap:14px}
+  .logo{font-weight:400;letter-spacing:.42em;font-size:19px}
+  .sub{color:var(--muted);font-size:12px;letter-spacing:.18em;text-transform:uppercase;border-left:1px solid var(--line);padding-left:14px}
+  .badge{margin-left:auto;font-size:12px;color:var(--muted);background:var(--soft);border-radius:99px;padding:5px 11px;white-space:nowrap}
+  .badge b{color:var(--ink)}
+  main{max-width:1320px;margin:auto;padding:20px;display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:20px;align-items:start}
+  @media(max-width:920px){main{grid-template-columns:1fr;padding:12px;gap:12px}.sub{display:none}}
+
+  /* stage */
+  .stage{background:var(--card);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;position:relative}
+  .stage-top{display:flex;align-items:center;gap:10px;padding:10px 12px;border-bottom:1px solid var(--line);min-height:52px}
+  .seg{display:inline-flex;background:var(--soft);border-radius:10px;padding:3px}
+  .seg button{border:0;background:transparent;padding:6px 14px;border-radius:8px;cursor:pointer;font-size:13px;color:var(--muted)}
+  .seg button.on{background:#fff;color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.08)}
+  .seg button:disabled{opacity:.4;cursor:default}
+  .hint{font-size:13px;color:var(--muted);margin-left:auto;text-align:right}
+  .canvas-box{position:relative;touch-action:none;user-select:none;background:#1b1b1d;display:grid;place-items:center;min-height:420px}
+  #cv,#res{max-width:100%;max-height:calc(100vh - 170px);display:block}
+  #res{display:none}
+  #loupe{position:absolute;width:130px;height:130px;border-radius:50%;border:3px solid #fff;box-shadow:0 6px 20px rgba(0,0,0,.35);pointer-events:none;display:none}
+  .drop{position:absolute;inset:0;display:grid;place-items:center;background:var(--card);cursor:pointer;transition:background .15s}
+  .drop.over{background:#faf8f3}
+  .drop-in{text-align:center;padding:30px}
+  .drop-ico{width:64px;height:64px;border-radius:50%;background:var(--soft);display:grid;place-items:center;margin:0 auto 14px}
+  .drop h2{margin:0 0 6px;font-size:18px;font-weight:600}
+  .drop p{margin:0;color:var(--muted);font-size:14px}
+  .busy{position:absolute;inset:0;background:rgba(255,255,255,.55);display:none;place-items:center}
+  .busy.on{display:grid}
+  .spin{width:34px;height:34px;border:3px solid var(--line);border-top-color:var(--ink);border-radius:50%;animation:s 0.8s linear infinite}
+  @keyframes s{to{transform:rotate(360deg)}}
+
+  /* panel */
+  .panel{background:var(--card);border:1px solid var(--line);border-radius:var(--r);position:sticky;top:76px}
+  @media(max-width:920px){.panel{position:static}}
+  .sec{padding:16px 18px;border-bottom:1px solid var(--line)}
+  .sec:last-child{border-bottom:0}
+  .lbl{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0 0 10px;display:flex;justify-content:space-between}
+  .dims{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:center}
+  .field{position:relative}
+  .field input{width:100%;border:1px solid var(--line);border-radius:10px;padding:11px 38px 11px 12px;font-size:16px;font-variant-numeric:tabular-nums;background:#fff}
+  .field input:focus{outline:2px solid var(--ink);outline-offset:-1px;border-color:transparent}
+  .field span{position:absolute;right:12px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:13px}
+  .field small{display:block;font-size:11px;color:var(--muted);margin:4px 2px 0}
+  .x{color:var(--muted);padding-bottom:18px}
+  .doors{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;max-height:330px;overflow:auto;padding:2px}
+  .door{border:1px solid var(--line);border-radius:10px;background:#ececec;padding:0;cursor:pointer;overflow:hidden;text-align:left;transition:border-color .12s, box-shadow .12s}
+  .door img{width:100%;aspect-ratio:3/4;object-fit:contain;display:block}
+  .door div{background:#fff;font-size:11.5px;line-height:1.25;padding:6px 7px;min-height:38px}
+  .door.on{border-color:var(--ink);box-shadow:0 0 0 1px var(--ink)}
+  .chips{display:flex;flex-wrap:wrap;gap:6px}
+  .chip{border:1px solid var(--line);background:#fff;border-radius:99px;padding:6px 12px;font-size:13px;cursor:pointer}
+  .chip.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+  details summary{cursor:pointer;font-size:13px;color:var(--muted);list-style:none}
+  details summary::before{content:"+ "}
+  details[open] summary::before{content:"– "}
+  .adv{display:grid;gap:12px;margin-top:12px}
+  .switch{display:flex;align-items:center;justify-content:space-between;font-size:14px}
+  .switch input{width:40px;height:22px;appearance:none;background:var(--line);border-radius:99px;position:relative;cursor:pointer;transition:background .15s}
+  .switch input::after{content:"";position:absolute;width:18px;height:18px;border-radius:50%;background:#fff;top:2px;left:2px;transition:left .15s;box-shadow:0 1px 2px rgba(0,0,0,.2)}
+  .switch input:checked{background:var(--ink)}
+  .switch input:checked::after{left:20px}
+  .actions{display:grid;gap:8px}
+  .btn{border:0;border-radius:11px;padding:13px 16px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px}
+  .btn.primary{background:var(--ink);color:#fff}
+  .btn.ghost{background:#fff;border:1px solid var(--line)}
+  .btn:disabled{opacity:.35;cursor:default}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%) translateY(20px);background:var(--ink);color:#fff;padding:10px 16px;border-radius:10px;font-size:14px;opacity:0;transition:all .2s;pointer-events:none;z-index:20;max-width:90vw}
+  .toast.on{opacity:1;transform:translateX(-50%)}
 </style>
 </head>
 <body>
-<header><h1>ALPINO</h1><span>Qapı vizualizasiyası</span></header>
+<header><div class="bar">
+  <div class="logo">ALPINO</div><div class="sub">Qapı vizualizasiyası</div>
+  <div class="badge" id="badge" title="Öyrətmə üçün toplanmış şəkillər">Dataset: <b id="cnt">0</b></div>
+</div></header>
+
 <main>
-  <section class="panel">
-    <label>1. Boşluğun şəkli</label>
-    <input type="file" id="photo" accept="image/*">
-    <div class="row">
-      <div><label>En, mm</label><input type="number" id="w" value="1588"></div>
-      <div><label>Hündürlük, mm</label><input type="number" id="h" value="2518"></div>
+  <section class="stage">
+    <div class="stage-top">
+      <div class="seg"><button id="vBefore" class="on" disabled>Boşluq</button><button id="vAfter" disabled>Nəticə</button></div>
+      <div class="hint" id="hint">Şəkil yükləyin</div>
     </div>
-    <label>2. Qapı modeli</label>
-    <select id="door"></select>
-    <label>Şüşə</label>
-    <select id="glass">
-      <option value="">Modelə görə</option><option value="clear">Şəffaf</option>
-      <option value="bronze">Bronz</option><option value="fluted">Rifli</option><option value="frosted">Mat</option>
-    </select>
-    <label>Kənardan içəri, mm</label>
-    <input type="number" id="inset" value="0">
-    <div class="check"><input type="checkbox" id="annotate" checked><span>Ölçüləri şəkildə göstər</span></div>
-    <button id="go" disabled>Vizualı hazırla</button>
-    <button class="ghost" id="reset" disabled>Küncləri sıfırla</button>
-    <div id="status"></div>
-    <div class="hint">Künclər avtomatik tapılır. Lazım olsa, 4 nöqtəni sürüşdürüb boşluğun kənarlarına oturdun (yuxarı-sol, yuxarı-sağ, aşağı-sağ, aşağı-sol).</div>
+    <div class="canvas-box" id="box">
+      <canvas id="cv"></canvas><img id="res" alt="Nəticə"><canvas id="loupe" width="130" height="130"></canvas>
+      <label class="drop" id="drop">
+        <input type="file" id="file" accept="image/*" hidden>
+        <div class="drop-in">
+          <div class="drop-ico"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 16V4m0 0-4 4m4-4 4 4"/><path d="M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/></svg></div>
+          <h2>Boşluğun şəklini seçin</h2>
+          <p>və ya faylı bura atın · JPG, PNG, telefon fotosu</p>
+        </div>
+      </label>
+      <div class="busy" id="busy"><div class="spin"></div></div>
+    </div>
   </section>
 
-  <section class="stage">
-    <div class="view">
-      <h3>Boşluq</h3>
-      <div class="canvas-wrap"><canvas id="cv"></canvas></div>
-      <div class="empty" id="empty1">Şəkil yükləyin</div>
+  <aside class="panel">
+    <div class="sec">
+      <div class="lbl">Boşluğun ölçüsü</div>
+      <div class="dims">
+        <div class="field"><input id="w" type="number" inputmode="numeric" value="1588"><span>mm</span><small>En</small></div>
+        <div class="x">×</div>
+        <div class="field"><input id="h" type="number" inputmode="numeric" value="2518"><span>mm</span><small>Hündürlük</small></div>
+      </div>
     </div>
-    <div class="view">
-      <h3>Nəticə</h3>
-      <img id="result" alt="" hidden>
-      <div class="empty" id="empty2">Burada vizual görünəcək</div>
-      <a class="dl" id="dl" download="alpino_vizual.jpg" hidden>Şəkli yüklə</a>
+    <div class="sec">
+      <div class="lbl"><span>Qapı modeli</span><span id="dname" style="text-transform:none;letter-spacing:0;font-weight:500;color:var(--ink)"></span></div>
+      <div class="doors" id="doors"></div>
     </div>
-  </section>
+    <div class="sec">
+      <div class="lbl">Şüşə</div>
+      <div class="chips" id="glass">
+        <button class="chip on" data-v="">Modelə görə</button><button class="chip" data-v="clear">Şəffaf</button>
+        <button class="chip" data-v="bronze">Bronz</button><button class="chip" data-v="fluted">Rifli</button><button class="chip" data-v="frosted">Mat</button>
+      </div>
+      <details style="margin-top:14px"><summary>Əlavə</summary>
+        <div class="adv">
+          <label class="switch">Ölçüləri şəkildə göstər <input type="checkbox" id="annotate"></label>
+          <div class="field"><input id="inset" type="number" inputmode="numeric" value="0"><span>mm</span><small>Kənardan içəri (qapı boşluğa nə qədər girir)</small></div>
+        </div>
+      </details>
+    </div>
+    <div class="sec actions">
+      <button class="btn primary" id="go" disabled>Vizualı hazırla</button>
+      <div class="row2">
+        <button class="btn ghost" id="dl" disabled>Yüklə</button>
+        <button class="btn ghost" id="share" disabled>Paylaş</button>
+      </div>
+      <div class="row2">
+        <button class="btn ghost" id="reset" disabled>Küncləri sıfırla</button>
+        <button class="btn ghost" id="new">Yeni şəkil</button>
+      </div>
+    </div>
+  </aside>
 </main>
+<div class="toast" id="toast"></div>
 
 <script>
-const $ = id => document.getElementById(id);
-const cv = $('cv'), ctx = cv.getContext('2d');
-let file = null, img = null, quad = null, autoQuad = null, drag = -1;
+const $=id=>document.getElementById(id);
+const cv=$('cv'),ctx=cv.getContext('2d'),loupe=$('loupe'),lctx=loupe.getContext('2d');
+let file=null,img=null,quad=null,auto=null,drag=-1,door='double_bar',glass='',resultUrl=null,dirty=true;
 
-fetch('/api/doors').then(r => r.json()).then(d => {
-  const groups = { parametric: 'Parametrik modellər', photo: 'Kataloqdan (şəkil)' };
-  for (const [kind, title] of Object.entries(groups)) {
-    const items = d.doors.filter(x => x.kind === kind);
-    if (!items.length) continue;
-    const g = document.createElement('optgroup'); g.label = title;
-    items.forEach(x => g.append(new Option(x.name, x.id)));
-    $('door').append(g);
-  }
-  if (!d.opening_model) status('Model 1 hələ öyrədilməyib — künclər əl ilə qoyulur.');
+function toast(t,ms=2400){const e=$('toast');e.textContent=t;e.classList.add('on');clearTimeout(e._t);e._t=setTimeout(()=>e.classList.remove('on'),ms)}
+function busy(on){$('busy').classList.toggle('on',on)}
+function setCount(n){$('cnt').textContent=n}
+
+fetch('/api/doors').then(r=>r.json()).then(d=>{
+  setCount(d.dataset);
+  const box=$('doors');
+  d.doors.forEach((x,i)=>{
+    const b=document.createElement('button');b.className='door'+(x.id===door?' on':'');b.dataset.id=x.id;
+    b.innerHTML=`<img loading="lazy" src="${x.kind==='photo'?'/api/door/'+x.id+'.png':'/api/door/'+x.id+'.png'}" alt=""><div>${x.name}</div>`;
+    b.onclick=()=>{door=x.id;document.querySelectorAll('.door').forEach(e=>e.classList.toggle('on',e===b));$('dname').textContent='';changed()};
+    box.append(b);
+  });
 });
+$('glass').onclick=e=>{const c=e.target.closest('.chip');if(!c)return;glass=c.dataset.v;document.querySelectorAll('.chip').forEach(x=>x.classList.toggle('on',x===c));changed()};
+['w','h','inset'].forEach(id=>$(id).addEventListener('change',changed));
+$('annotate').onchange=changed;
 
-function status(t) { $('status').textContent = t; }
+// avtomatik yenilə: nəticə ekranındaykən seçim dəyişəndə
+let rt;function changed(){dirty=true;if(resultUrl&&$('vAfter').classList.contains('on')){clearTimeout(rt);rt=setTimeout(render,250)}}
 
-$('photo').onchange = async e => {
-  file = e.target.files[0]; if (!file) return;
-  status('Boşluq axtarılır…');
-  const fd = new FormData(); fd.append('photo', file);
-  const det = await fetch('/api/detect', { method: 'POST', body: fd }).then(r => r.json());
-  img = new Image();
-  img.onload = () => {
-    // server şəkli kiçildə bilər: canvas server ölçüsündə işləyir
-    cv.width = det.size[0]; cv.height = det.size[1];
-    quad = det.quad.map(p => [...p]); autoQuad = det.quad.map(p => [...p]);
-    $('empty1').hidden = true; $('go').disabled = false; $('reset').disabled = false;
-    status(det.auto ? `Boşluq tapıldı (${Math.round(det.score * 100)}%). Yoxlayın və hazırlayın.` : 'Boşluğu 4 nöqtə ilə göstərin.');
-    draw();
+// ---- şəkil yükləmə
+const drop=$('drop');
+$('file').onchange=e=>load(e.target.files[0]);
+['dragover','dragenter'].forEach(t=>drop.addEventListener(t,e=>{e.preventDefault();drop.classList.add('over')}));
+['dragleave','drop'].forEach(t=>drop.addEventListener(t,e=>{e.preventDefault();drop.classList.remove('over')}));
+drop.addEventListener('drop',e=>load(e.dataTransfer.files[0]));
+$('new').onclick=()=>$('file').click();
+
+async function load(f){
+  if(!f)return; file=f; busy(true);
+  const fd=new FormData();fd.append('photo',f);
+  let det;try{det=await fetch('/api/detect',{method:'POST',body:fd}).then(r=>{if(!r.ok)throw 0;return r.json()})}catch{busy(false);toast('Şəkil oxunmadı');return}
+  img=new Image();
+  img.onload=()=>{
+    cv.width=det.size[0];cv.height=det.size[1];
+    quad=det.quad.map(p=>[...p]);auto=det.quad.map(p=>[...p]);
+    drop.style.display='none';resultUrl=null;dirty=true;
+    ['go','reset'].forEach(i=>$(i).disabled=false);['dl','share','vAfter'].forEach(i=>$(i).disabled=true);
+    show('before');busy(false);
+    $('hint').textContent=det.auto?'Boşluq avtomatik tapıldı — lazım olsa küncləri düzəldin':'Sarı nöqtələri boşluğun 4 küncünə çəkin';
   };
-  img.src = URL.createObjectURL(file);
-};
-
-function draw() {
-  ctx.drawImage(img, 0, 0, cv.width, cv.height);
-  const r = Math.max(8, cv.width / 90);
-  ctx.lineWidth = Math.max(2, cv.width / 400);
-  ctx.strokeStyle = '#ffcc00'; ctx.fillStyle = 'rgba(255,204,0,.15)';
-  ctx.beginPath(); quad.forEach((p, i) => i ? ctx.lineTo(...p) : ctx.moveTo(...p)); ctx.closePath(); ctx.fill(); ctx.stroke();
-  quad.forEach(p => { ctx.beginPath(); ctx.arc(p[0], p[1], r, 0, 7); ctx.fillStyle = '#ffcc00'; ctx.fill(); ctx.stroke(); });
+  img.src=URL.createObjectURL(f);
 }
 
-function pos(e) {
-  const b = cv.getBoundingClientRect();
-  return [(e.clientX - b.left) * cv.width / b.width, (e.clientY - b.top) * cv.height / b.height];
+// ---- çəkmə
+function draw(){
+  ctx.drawImage(img,0,0,cv.width,cv.height);
+  const s=cv.width/(cv.getBoundingClientRect().width||cv.width);
+  ctx.fillStyle='rgba(0,0,0,.35)';ctx.beginPath();ctx.rect(0,0,cv.width,cv.height);
+  quad.slice().reverse().forEach((p,i)=>i?ctx.lineTo(...p):ctx.moveTo(...p));ctx.closePath();ctx.fill('evenodd');
+  ctx.lineWidth=2*s;ctx.strokeStyle='#ffd23f';ctx.beginPath();quad.forEach((p,i)=>i?ctx.lineTo(...p):ctx.moveTo(...p));ctx.closePath();ctx.stroke();
+  quad.forEach((p,i)=>{ctx.beginPath();ctx.arc(p[0],p[1],(drag===i?11:9)*s,0,7);ctx.fillStyle='#ffd23f';ctx.fill();ctx.lineWidth=2.5*s;ctx.strokeStyle='#151517';ctx.stroke()});
 }
-cv.addEventListener('pointerdown', e => {
-  if (!quad) return;
-  const p = pos(e); let best = 1e9;
-  quad.forEach((q, i) => { const d = Math.hypot(q[0] - p[0], q[1] - p[1]); if (d < best) { best = d; drag = i; } });
-  if (best > cv.width / 12) drag = -1; else cv.setPointerCapture(e.pointerId);
+function pos(e){const b=cv.getBoundingClientRect();return[(e.clientX-b.left)*cv.width/b.width,(e.clientY-b.top)*cv.height/b.height]}
+cv.addEventListener('pointerdown',e=>{
+  if(!quad)return;const p=pos(e),s=cv.width/cv.getBoundingClientRect().width;let best=1e9;
+  quad.forEach((q,i)=>{const d=Math.hypot(q[0]-p[0],q[1]-p[1]);if(d<best){best=d;drag=i}});
+  if(best>40*s){drag=-1;return}cv.setPointerCapture(e.pointerId);move(e);
 });
-cv.addEventListener('pointermove', e => { if (drag < 0) return; quad[drag] = pos(e); draw(); });
-cv.addEventListener('pointerup', () => drag = -1);
-$('reset').onclick = () => { quad = autoQuad.map(p => [...p]); draw(); };
+cv.addEventListener('pointermove',e=>{if(drag>=0)move(e)});
+cv.addEventListener('pointerup',()=>{drag=-1;loupe.style.display='none';draw();dirty=true});
+function move(e){
+  const p=pos(e);p[0]=Math.max(0,Math.min(cv.width,p[0]));p[1]=Math.max(0,Math.min(cv.height,p[1]));quad[drag]=p;draw();
+  // lupa: dəqiq yerləşdirmək üçün
+  const b=cv.getBoundingClientRect(),bb=$('box').getBoundingClientRect(),z=3,r=65,src=r*2/z*cv.width/b.width;
+  lctx.clearRect(0,0,130,130);lctx.drawImage(img,p[0]-src/2,p[1]-src/2,src,src,0,0,130,130);
+  lctx.strokeStyle='#ffd23f';lctx.lineWidth=1.5;lctx.beginPath();lctx.moveTo(65,50);lctx.lineTo(65,80);lctx.moveTo(50,65);lctx.lineTo(80,65);lctx.stroke();
+  const lx=e.clientX-bb.left,ly=e.clientY-bb.top;loupe.style.left=(lx<170?lx+30:lx-160)+'px';loupe.style.top=Math.max(0,ly-160)+'px';loupe.style.display='block';
+}
+$('reset').onclick=()=>{quad=auto.map(p=>[...p]);show('before');dirty=true};
+window.addEventListener('resize',()=>quad&&draw());
 
-$('go').onclick = async () => {
-  $('go').disabled = true; status('Hazırlanır…');
-  const fd = new FormData();
-  fd.append('photo', file); fd.append('quad', JSON.stringify(quad));
-  fd.append('door_id', $('door').value); fd.append('width_mm', $('w').value); fd.append('height_mm', $('h').value);
-  fd.append('inset_mm', $('inset').value); fd.append('glass', $('glass').value); fd.append('annotate', $('annotate').checked);
-  const r = await fetch('/api/render', { method: 'POST', body: fd });
-  $('go').disabled = false;
-  if (!r.ok) { status((await r.json()).detail || 'Xəta'); return; }
-  const url = URL.createObjectURL(await r.blob());
-  $('result').src = url; $('result').hidden = false; $('empty2').hidden = true;
-  $('dl').href = url; $('dl').hidden = false; status('Hazırdır.');
+// ---- görünüş
+function show(v){
+  const after=v==='after';$('vAfter').classList.toggle('on',after);$('vBefore').classList.toggle('on',!after);
+  cv.style.display=after?'none':'block';$('res').style.display=after?'block':'none';if(!after)draw();
+}
+$('vBefore').onclick=()=>show('before');
+$('vAfter').onclick=()=>{if(dirty)render();else show('after')};
+
+// ---- hazırla
+$('go').onclick=render;
+async function render(){
+  const w=+$('w').value,h=+$('h').value;
+  if(!(w>=200&&h>=500)){toast('Ölçünü mm ilə yazın, məs. 1588 × 2518');return}
+  busy(true);$('go').disabled=true;
+  const fd=new FormData();
+  Object.entries({photo:file,quad:JSON.stringify(quad),door_id:door,width_mm:w,height_mm:h,inset_mm:+$('inset').value||0,glass,annotate:$('annotate').checked})
+    .forEach(([k,v])=>fd.append(k,v));
+  try{
+    const r=await fetch('/api/render',{method:'POST',body:fd});
+    if(!r.ok){toast((await r.json()).detail||'Xəta');return}
+    setCount(r.headers.get('X-Dataset-Count')||$('cnt').textContent);
+    if(resultUrl)URL.revokeObjectURL(resultUrl);resultUrl=URL.createObjectURL(await r.blob());
+    $('res').src=resultUrl;dirty=false;['dl','share','vAfter'].forEach(i=>$(i).disabled=false);show('after');
+    $('hint').textContent='Model və ya şüşəni dəyişin — nəticə özü yenilənir';
+  }catch{toast('Serverlə əlaqə alınmadı')}
+  finally{busy(false);$('go').disabled=false}
+}
+function fname(){return `alpino_${$('w').value}x${$('h').value}_${door}.jpg`}
+$('dl').onclick=()=>{const a=document.createElement('a');a.href=resultUrl;a.download=fname();a.click()};
+$('share').onclick=async()=>{
+  const blob=await fetch(resultUrl).then(r=>r.blob()),f=new File([blob],fname(),{type:'image/jpeg'});
+  if(navigator.canShare&&navigator.canShare({files:[f]})){try{await navigator.share({files:[f],title:'Alpino Doors'})}catch{}}
+  else{$('dl').click();toast('Bu cihazda paylaşma yoxdur — şəkil yükləndi')}
 };
 </script>
 </body>

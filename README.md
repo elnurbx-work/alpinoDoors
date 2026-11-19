@@ -39,6 +39,16 @@ docker run -d -p 8000:8000 -v $PWD/weights:/app/weights -v $PWD/catalog:/app/cat
 
 ## Öyrətmə (train)
 
+### 0. Saytdan dataset yığmaq (ən asan yol)
+Saytda hər «Vizualı hazırla» basılanda şəkil və künclər avtomatik olaraq hazır etiket kimi `dataset/` qovluğuna yazılır (`ALPINO_DATASET`). Yuxarıdakı «Dataset» sayğacı neçə şəkil yığıldığını göstərir.
+Yükləmək üçün: `https://SAYT/api/dataset/export?token=ADMIN_TOKEN` → zip, sonra:
+
+```bash
+unzip alpino_dataset_*.zip -d export_sayt
+python scripts/prepare_dataset.py --task opening --src export_sayt --out data/opening
+python scripts/train.py opening
+```
+
 ### 1. Şəkilləri toplayın
 - **Model 1:** obyektlərdən boşluq şəkilləri (WhatsApp-dan gələnlər idealdır), müxtəlif bucaq və işıqda. Hədəf: 200+ şəkil.
 - **Model 2:** qapılarınızın şəkilləri (Instagram, kataloq). Hədəf: 150+ şəkil.

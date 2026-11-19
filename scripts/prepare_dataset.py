@@ -26,6 +26,8 @@ IMG_EXT = {".jpg", ".jpeg", ".png", ".webp", ".bmp"}
 
 def poly_to_pose(line: str) -> str | None:
     v = line.split()
+    if len(v) == 17 and all(v[i] in ("0", "1", "2") for i in (7, 10, 13, 16)):
+        return line  # artıq pose formatındadır (saytdan yığılan dataset)
     cls, pts = int(v[0]), np.array(v[1:], np.float32).reshape(-1, 2)
     if len(pts) < 4:
         return None
