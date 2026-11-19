@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Alpino Doors — Vizualizasiya</title>
+<style>
+  :root { --ink:#1c1c1e; --muted:#6b6b70; --line:#e3e3e6; --accent:#111; --bg:#f6f6f4; }
+  * { box-sizing: border-box; }
+  body { margin:0; font:15px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; color:var(--ink); background:var(--bg); }
+  header { padding:18px 24px; border-bottom:1px solid var(--line); background:#fff; display:flex; align-items:baseline; gap:14px; }
+  header h1 { margin:0; font-size:18px; letter-spacing:.32em; font-weight:500; }
+  header span { color:var(--muted); font-size:13px; }
+  main { display:grid; grid-template-columns: 320px 1fr; gap:24px; padding:24px; max-width:1500px; margin:auto; }
+  @media (max-width: 860px) { main { grid-template-columns: 1fr; } }
+  .panel { background:#fff; border:1px solid var(--line); border-radius:10px; padding:18px; align-self:start; }
+  label { display:block; font-size:12px; color:var(--muted); margin:14px 0 6px; text-transform:uppercase; letter-spacing:.06em; }
+  input[type=number], select, input[type=file] { width:100%; padding:9px 10px; border:1px solid var(--line); border-radius:7px; font:inherit; background:#fff; }
+  .row { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  button { margin-top:18px; width:100%; padding:12px; border:0; border-radius:8px; background:var(--accent); color:#fff; font:inherit; font-weight:600; cursor:pointer; }
+  button:disabled { opacity:.4; cursor:default; }
+  button.ghost { background:#fff; color:var(--ink); border:1px solid var(--line); margin-top:8px; font-weight:500; }
+  .check { display:flex; gap:8px; align-items:center; margin-top:14px; font-size:14px; }
+  .hint { color:var(--muted); font-size:13px; margin-top:10px; }
+  .stage { display:grid; grid-template-columns:1fr 1fr; gap:18px; }
+  @media (max-width: 1100px) { .stage { grid-template-columns:1fr; } }
+  .view { background:#fff; border:1px solid var(--line); border-radius:10px; padding:12px; min-height:300px; }
+  .view h3 { margin:2px 4px 10px; font-size:13px; font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:.06em; }
+  .canvas-wrap { position:relative; touch-action:none; }
+  canvas, #result { width:100%; display:block; border-radius:6px; }
+  .empty { color:var(--muted); display:grid; place-items:center; height:260px; text-align:center; }
+  #status { font-size:13px; margin-top:12px; min-height:1.4em; }
+  a.dl { display:inline-block; margin-top:10px; color:var(--ink); }
+</style>
+</head>
+<body>
+<header><h1>ALPINO</h1><span>Qapı vizualizasiyası</span></header>
+<main>
+  <section class="panel">
+    <label>1. Boşluğun şəkli</label>
+    <input type="file" id="photo" accept="image/*">
+    <div class="row">
+      <div><label>En, mm</label><input type="number" id="w" value="1588"></div>
+      <div><label>Hündürlük, mm</label><input type="number" id="h" value="2518"></div>
+    </div>
+    <label>2. Qapı modeli</label>
+    <select id="door"></select>
+    <label>Şüşə</label>
+    <select id="glass">
+      <option value="">Modelə görə</option><option value="clear">Şəffaf</option>
+      <option value="bronze">Bronz</option><option value="fluted">Rifli</option><option value="frosted">Mat</option>
+    </select>
+    <label>Kənardan içəri, mm</label>
+    <input type="number" id="inset" value="0">
+    <div class="check"><input type="checkbox" id="annotate" checked><span>Ölçüləri şəkildə göstər</span></div>
+    <button id="go" disabled>Vizualı hazırla</button>
+    <button class="ghost" id="reset" disabled>Küncləri sıfırla</button>
+    <div id="status"></div>
+    <div class="hint">Künclər avtomatik tapılır. Lazım olsa, 4 nöqtəni sürüşdürüb boşluğun kənarlarına oturdun (yuxarı-sol, yuxarı-sağ, aşağı-sağ, aşağı-sol).</div>
+  </section>
+
+  <section class="stage">
+    <div class="view">
+      <h3>Boşluq</h3>
+      <div class="canvas-wrap"><canvas id="cv"></canvas></div>
+      <div class="empty" id="empty1">Şəkil yükləyin</div>
+    </div>
+    <div class="view">
+      <h3>Nəticə</h3>
+      <img id="result" alt="" hidden>
+      <div class="empty" id="empty2">Burada vizual görünəcək</div>
+      <a class="dl" id="dl" download="alpino_vizual.jpg" hidden>Şəkli yüklə</a>
+    </div>
+  </section>
+</main>
+
+<script>
+const $ = id => document.getElementById(id);
+const cv = $('cv'), ctx = cv.getContext('2d');
+let file = null, img = null, quad = null, autoQuad = null, drag = -1;
+
+fetch('/api/doors').then(r => r.json()).then(d => {
+  const groups = { parametric: 'Parametrik modellər', photo: 'Kataloqdan (şəkil)' };
+  for (const [kind, title] of Object.entries(groups)) {
+    const items = d.doors.filter(x => x.kind === kind);
+    if (!items.length) continue;
+    const g = document.createElement('optgroup'); g.label = title;
+    items.forEach(x => g.append(new Option(x.name, x.id)));
+    $('door').append(g);
+  }
+  if (!d.opening_model) status('Model 1 hələ öyrədilməyib — künclər əl ilə qoyulur.');
+});
+
+function status(t) { $('status').textContent = t; }
+
+$('photo').onchange = async e => {
+  file = e.target.files[0]; if (!file) return;
+  status('Boşluq axtarılır…');
+  const fd = new FormData(); fd.append('photo', file);
+  const det = await fetch('/api/detect', { method: 'POST', body: fd }).then(r => r.json());
+  img = new Image();
+  img.onload = () => {
+    // server şəkli kiçildə bilər: canvas server ölçüsündə işləyir
+    cv.width = det.size[0]; cv.height = det.size[1];
+    quad = det.quad.map(p => [...p]); autoQuad = det.quad.map(p => [...p]);
+    $('empty1').hidden = true; $('go').disabled = false; $('reset').disabled = false;
+    status(det.auto ? `Boşluq tapıldı (${Math.round(det.score * 100)}%). Yoxlayın və hazırlayın.` : 'Boşluğu 4 nöqtə ilə göstərin.');
+    draw();
+  };
+  img.src = URL.createObjectURL(file);
+};
+
+function draw() {
+  ctx.drawImage(img, 0, 0, cv.width, cv.height);
+  const r = Math.max(8, cv.width / 90);
+  ctx.lineWidth = Math.max(2, cv.width / 400);
+  ctx.strokeStyle = '#ffcc00'; ctx.fillStyle = 'rgba(255,204,0,.15)';
+  ctx.beginPath(); quad.forEach((p, i) => i ? ctx.lineTo(...p) : ctx.moveTo(...p)); ctx.closePath(); ctx.fill(); ctx.stroke();
+  quad.forEach(p => { ctx.beginPath(); ctx.arc(p[0], p[1], r, 0, 7); ctx.fillStyle = '#ffcc00'; ctx.fill(); ctx.stroke(); });
+}
+
+function pos(e) {
+  const b = cv.getBoundingClientRect();
+  return [(e.clientX - b.left) * cv.width / b.width, (e.clientY - b.top) * cv.height / b.height];
+}
+cv.addEventListener('pointerdown', e => {
+  if (!quad) return;
+  const p = pos(e); let best = 1e9;
+  quad.forEach((q, i) => { const d = Math.hypot(q[0] - p[0], q[1] - p[1]); if (d < best) { best = d; drag = i; } });
+  if (best > cv.width / 12) drag = -1; else cv.setPointerCapture(e.pointerId);
+});
+cv.addEventListener('pointermove', e => { if (drag < 0) return; quad[drag] = pos(e); draw(); });
+cv.addEventListener('pointerup', () => drag = -1);
+$('reset').onclick = () => { quad = autoQuad.map(p => [...p]); draw(); };
+
+$('go').onclick = async () => {
+  $('go').disabled = true; status('Hazırlanır…');
+  const fd = new FormData();
+  fd.append('photo', file); fd.append('quad', JSON.stringify(quad));
+  fd.append('door_id', $('door').value); fd.append('width_mm', $('w').value); fd.append('height_mm', $('h').value);
+  fd.append('inset_mm', $('inset').value); fd.append('glass', $('glass').value); fd.append('annotate', $('annotate').checked);
+  const r = await fetch('/api/render', { method: 'POST', body: fd });
+  $('go').disabled = false;
+  if (!r.ok) { status((await r.json()).detail || 'Xəta'); return; }
+  const url = URL.createObjectURL(await r.blob());
+  $('result').src = url; $('result').hidden = false; $('empty2').hidden = true;
+  $('dl').href = url; $('dl').hidden = false; status('Hazırdır.');
+};
+</script>
+</body>
+</html>

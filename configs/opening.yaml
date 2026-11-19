@@ -1,0 +1,10 @@
+# Model 1: qapı boşluğu (4 künc: TL, TR, BR, BL)
+path: ../data/opening
+train: images/train
+val: images/val
+
+kpt_shape: [4, 3]
+flip_idx: [1, 0, 3, 2]   # üfüqi çevirmədə TL<->TR, BR<->BL
+
+names:
+  0: opening

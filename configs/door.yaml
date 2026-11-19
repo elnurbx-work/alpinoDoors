@@ -1,0 +1,7 @@
+# Model 2: qapının özü (seqmentasiya maskası)
+path: ../data/door
+train: images/train
+val: images/val
+
+names:
+  0: door
