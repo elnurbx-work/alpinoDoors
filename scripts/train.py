@@ -28,6 +28,8 @@ def main():
     ap.add_argument("--batch", type=int, default=16)
     ap.add_argument("--size", default="n", help="n / s / m — böyüdükcə dəqiq, amma yavaş")
     ap.add_argument("--device", default=None, help="0 (GPU), cpu və s.")
+    ap.add_argument("--base", default=None,
+                    help="başlanğıc çəkilər; məs. weights/opening_pretrain.pt (açıq datasetdə öncədən öyrədilib)")
     a = ap.parse_args()
 
     kind, cfg = TASK[a.model]
@@ -37,7 +39,7 @@ def main():
     data = ROOT / "runs" / f"{a.model}_data.yaml"
     data.parent.mkdir(exist_ok=True)
     data.write_text(yaml.safe_dump(d, allow_unicode=True), encoding="utf-8")
-    base = YOLO(f"yolo11{a.size}-{kind}.pt")  # COCO-da öncədən öyrədilmiş baza
+    base = YOLO(a.base or f"yolo11{a.size}-{kind}.pt")  # öncədən öyrədilmiş baza
     res = base.train(
         data=str(data), epochs=a.epochs, imgsz=a.imgsz, batch=a.batch, device=a.device,
         project=str(ROOT / "runs"), name=a.model, exist_ok=True, patience=30,

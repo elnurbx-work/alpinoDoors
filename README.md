@@ -53,6 +53,11 @@ python scripts/train.py opening
 - **Model 1:** obyektlərdən boşluq şəkilləri (WhatsApp-dan gələnlər idealdır), müxtəlif bucaq və işıqda. Hədəf: 200+ şəkil.
 - **Model 2:** qapılarınızın şəkilləri (Instagram, kataloq). Hədəf: 150+ şəkil.
 
+### 1b. Açıq dataset (ilkin öyrətmə)
+`weights/opening_pretrain.pt` — [DoorDetect](https://github.com/MiguelARD/DoorDetect-Dataset) (Open Images + MCIndoor, 335 qapılı + 150 fon şəkli) üzərində öyrədilib.
+Təkbaşına təmir şəkillərində zəifdir (hazır qapıları tanıyır, boş boşluqları yox), ona görə saytda istifadə olunmur —
+öz datanızla öyrədərkən başlanğıc kimi verin: `python scripts/train.py opening --base weights/opening_pretrain.pt`.
+
 ### 2. Etiketləyin — avtomatik (tövsiyə olunur)
 Model 1 üçün əl ilə etiket yazmaq lazım deyil: açıq lüğətli YOLOE + SAM 2 boşluqları özü tapır, sonra yoxlama vərəqlərinə baxıb pisləri atırsınız.
 

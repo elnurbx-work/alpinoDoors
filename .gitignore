@@ -6,4 +6,5 @@ runs/
 weights/*.pt
 *.pt
 !weights/yoloe_doors.pt
+!weights/opening_pretrain.pt
 .DS_Store
