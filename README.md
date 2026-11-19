@@ -43,7 +43,17 @@ docker run -d -p 8000:8000 -v $PWD/weights:/app/weights -v $PWD/catalog:/app/cat
 - **Model 1:** obyektlərdən boşluq şəkilləri (WhatsApp-dan gələnlər idealdır), müxtəlif bucaq və işıqda. Hədəf: 200+ şəkil.
 - **Model 2:** qapılarınızın şəkilləri (Instagram, kataloq). Hədəf: 150+ şəkil.
 
-### 2. Etiketləyin
+### 2. Etiketləyin — avtomatik (tövsiyə olunur)
+Model 1 üçün əl ilə etiket yazmaq lazım deyil: açıq lüğətli YOLOE + SAM 2 boşluqları özü tapır, sonra yoxlama vərəqlərinə baxıb pisləri atırsınız.
+
+```bash
+pip install "git+https://github.com/ultralytics/CLIP.git"
+python scripts/auto_label.py --src bosluq_sekilleri/ --out data/opening
+# data/opening/review/sheet_*.jpg vərəqlərinə baxın, pisləri rejected.txt-yə yazın (şəkil adı və ya ad:indeks)
+python scripts/auto_label.py --src bosluq_sekilleri/ --out data/opening --reject rejected.txt
+```
+
+### 2b. Etiketləyin — əl ilə
 [CVAT](https://www.cvat.ai), [Label Studio](https://labelstud.io) və ya [Roboflow](https://roboflow.com) istifadə edin.
 - **Model 1:** hər boşluğu **4 nöqtəli poliqon** ilə çəkin. Künclər divarın üz tərəfində olmalıdır, qapının qoyulacağı yerdə. Class: `opening`.
 - **Model 2:** qapının konturunu poliqonla çəkin. Class: `door`.
